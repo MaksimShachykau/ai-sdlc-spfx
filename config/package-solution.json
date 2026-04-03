@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "ai-sdlc-matrix-client-side-solution",
+    "id": "5f91f70c-7df0-4666-9851-09f42b066466",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "ai-sdlc-matrix description"
+      },
+      "longDescription": {
+        "default": "ai-sdlc-matrix description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "ai-sdlc-matrix Feature",
+        "description": "The feature that activates elements of the ai-sdlc-matrix solution.",
+        "id": "aa17fef7-2aa1-4b20-9284-99055457c5f5",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/ai-sdlc-matrix.sppkg"
+  }
+}

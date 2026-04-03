@@ -1,0 +1,21 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.20.8",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.24.0"
+    },
+    "version": "1.20.0",
+    "libraryName": "ai-sdlc-matrix",
+    "libraryId": "5f91f70c-7df0-4666-9851-09f42b066466",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "ai-sdlc-matrix",
+    "solutionShortDescription": "ai-sdlc-matrix description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
