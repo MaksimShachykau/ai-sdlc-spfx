@@ -128,6 +128,69 @@ const LEVEL_ICONS: Record<Level, () => React.ReactElement> = {
   'ai-native':  IconNative,
 };
 
+// ─── Page modal ──────────────────────────────────────────────────────────────
+
+function PageModal({ url, onClose }: { url: string; onClose: () => void }): React.ReactElement {
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent): void => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(2px)' }}
+      />
+      {/* Modal */}
+      <div style={{
+        position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
+        width: '92%', maxWidth: 1100, height: 'calc(100vh - 100px)',
+        background: '#fff', borderRadius: 16, zIndex: 1001,
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+        overflow: 'hidden',
+      }}>
+        {/* Modal header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#334155', textDecoration: 'none', padding: '5px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#f1f5f9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff'; }}
+          >
+            <svg width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+            Open full page
+          </a>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#e2e8f0'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+          >
+            <svg width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        {/* iframe */}
+        <iframe
+          src={url}
+          style={{ flex: 1, border: 'none', width: '100%' }}
+          title="Role page"
+        />
+      </div>
+    </>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactElement {
@@ -138,6 +201,7 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
   const [selectedCell, setSelectedCell] = React.useState<string | null>(null);
   const [loading, setLoading]           = React.useState(true);
   const [error, setError]               = React.useState<string | null>(null);
+  const [modalUrl, setModalUrl]         = React.useState<string | null>(null);
 
   React.useEffect(() => {
     Promise.all([
@@ -171,7 +235,7 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
   }, [sp]);
 
   const openCell = (role: string, phaseFolder: string): void => {
-    window.open(`${SITE_URL}/SitePages/ai-sdlc-matrix/${role}/${phaseFolder}/${level}.aspx`, '_blank');
+    setModalUrl(`${SITE_URL}/SitePages/ai-sdlc-matrix/${role}/${phaseFolder}/${level}.aspx`);
   };
 
   if (loading) return <div style={{ padding: 24, fontFamily: 'Segoe UI, sans-serif' }}>Loading…</div>;
@@ -231,7 +295,7 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
       {/* Matrix */}
       <div style={{ padding: '20px 24px' }}>
         <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 12 }}>
-          Click any cell to open the role page. Showing <strong style={{ color: '#64748b' }}>{roles.length}</strong> roles.
+          Click any cell to view the role page. Showing <strong style={{ color: '#64748b' }}>{roles.length}</strong> roles.
         </div>
 
         <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -309,6 +373,9 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
           <span style={{ fontWeight: 700, color: activeLevelMeta.color }}>{activeLevelMeta.label}</span>
         </div>
       </div>
+
+      {/* Page modal */}
+      {modalUrl && <PageModal url={modalUrl} onClose={() => { setModalUrl(null); setSelectedCell(null); }} />}
     </div>
   );
 }
