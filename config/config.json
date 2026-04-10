@@ -9,10 +9,28 @@
           "manifest": "./src/webparts/matrixWebPart/MatrixWebPartWebPart.manifest.json"
         }
       ]
+    },
+    "card-web-part-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/cardWebPart/CardWebPartWebPart.js",
+          "manifest": "./src/webparts/cardWebPart/CardWebPartWebPart.manifest.json"
+        }
+      ]
+    },
+    "md-card-web-part-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/mdCardWebPart/MdCardWebPartWebPart.js",
+          "manifest": "./src/webparts/mdCardWebPart/MdCardWebPartWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
   "localizedResources": {
-    "MatrixWebPartWebPartStrings": "lib/webparts/matrixWebPart/loc/{locale}.js"
+    "MatrixWebPartWebPartStrings": "lib/webparts/matrixWebPart/loc/{locale}.js",
+    "CardWebPartWebPartStrings": "lib/webparts/cardWebPart/loc/{locale}.js",
+    "MdCardWebPartWebPartStrings": "lib/webparts/mdCardWebPart/loc/{locale}.js"
   }
 }

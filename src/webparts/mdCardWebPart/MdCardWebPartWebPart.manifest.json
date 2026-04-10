@@ -1,0 +1,24 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "8538ea39-9721-4241-ad73-0c51de38e365",
+  "alias": "MdCardWebPartWebPart",
+  "componentType": "WebPart",
+
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "SharePointFullPage"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+    "group": { "default": "Advanced" },
+    "title": { "default": "AI-SDLC Markdown Card" },
+    "description": { "default": "Renders a markdown file from SharePoint by direct URL." },
+    "officeFabricIconFontName": "PageHeaderEdit",
+    "properties": {
+      "fileUrl": ""
+    }
+  }]
+}
