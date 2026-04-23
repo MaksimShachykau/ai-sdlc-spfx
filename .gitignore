@@ -33,3 +33,6 @@ obj
 
 # Styles Generated Code
 *.scss.ts
+
+# Local environment — copy .env.template and fill in your values
+.env

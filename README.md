@@ -1,73 +1,113 @@
-# ai-sdlc-matrix
+# AI-SDLC Role Matrix
 
-## Summary
-
-Short summary on functionality and used technologies.
-
-[picture of the solution in action, if possible]
+An interactive SharePoint Framework web part that renders an AI-SDLC role matrix — a role × phase grid showing how different team roles are involved across SDLC phases at each AI maturity level (AI Enabled, AI-First, AI Native).
 
 ## Used SharePoint Framework Version
 
-![version](https://img.shields.io/badge/version-1.20.0-green.svg)
+![version](https://img.shields.io/badge/SPFx-1.20.0-green.svg)
+![Node.js](https://img.shields.io/badge/Node.js-18.x-brightgreen.svg)
 
-## Applies to
+## Web Parts
 
-- [SharePoint Framework](https://aka.ms/spfx)
-- [Microsoft 365 tenant](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/set-up-your-developer-tenant)
-
-> Get your own free development tenant by subscribing to [Microsoft 365 developer program](http://aka.ms/o365devprogram)
+| Web Part | Description |
+| --- | --- |
+| `matrixWebPart` | Interactive role × phase involvement matrix with level tabs and modal page previews |
+| `mdCardWebPart` | Renders a Markdown file from SharePoint as a styled card |
 
 ## Prerequisites
 
-> Any special pre-requisites?
+- Node.js `>=18.17.1 <19.0.0`
+- SharePoint site with the matrix SitePages folder hierarchy in place
+- App Catalog access for deployment
+
+## Setup
+
+### 1. Clone and install
+
+```bash
+git clone <repo-url>
+cd ai-sdlc-spfx
+npm install
+```
+
+### 2. Configure environment
+
+```bash
+cp .env.template .env
+```
+
+Edit `.env` and fill in your SharePoint site values:
+
+```env
+SP_SITE_URL=https://<tenant>.sharepoint.com/sites/<site-name>
+SP_FOLDER_ROOT=/sites/<site-name>/SitePages/<matrix-folder-name>
+SP_WORKBENCH_URL=https://<tenant>.sharepoint.com/sites/<site-name>/_layouts/workbench.aspx
+```
+
+| Variable | Purpose |
+| --- | --- |
+| `SP_SITE_URL` | Full URL of the SharePoint site hosting the matrix |
+| `SP_FOLDER_ROOT` | Server-relative path to the SitePages matrix folder |
+| `SP_WORKBENCH_URL` | Workbench URL opened by `gulp serve` |
+
+### 3. Run locally
+
+```bash
+gulp serve
+```
+
+Opens the SPFx workbench at the URL defined in `SP_WORKBENCH_URL`.
+
+## Commands
+
+```bash
+npm install                      # Install dependencies
+gulp serve                       # Start local dev server (HTTPS, port 4321)
+gulp bundle                      # Bundle for development
+gulp bundle --ship               # Bundle for production (minified)
+gulp package-solution --ship     # Generate .sppkg for deployment
+gulp clean                       # Remove build artifacts
+gulp test                        # Run tests
+```
+
+## Architecture
+
+### Data flow (matrixWebPart)
+
+1. On mount, fetches **role folders** from the SharePoint folder hierarchy under `SP_FOLDER_ROOT/{role}/`.
+2. Queries the **Site Pages** list filtered by `FileRef` starting with the matrix root path, selecting `FileRef` and `Involvement` columns.
+3. Indexes results into a `cellMap` keyed as `{role}|{phase}` for the active level.
+4. Renders a role × phase grid where each cell shows an involvement dot.
+
+### Matrix dimensions
+
+- **Phases** — Base AI Maturity, Planning, Requirements, Design/Architecture, Development, Testing, Deployment/Release, Maintenance
+- **Levels** — AI Enabled, AI-First, AI Native
+- **Involvement types** — Lead, Active, Review, On-demand, None
+
+## Deployment
+
+```bash
+gulp bundle --ship
+gulp package-solution --ship
+```
+
+Upload `sharepoint/solution/ai-sdlc-matrix.sppkg` to the SharePoint App Catalog. `skipFeatureDeployment: true` enables tenant-wide deployment.
 
 ## Solution
 
-| Solution    | Author(s)                                               |
-| ----------- | ------------------------------------------------------- |
-| folder name | Author details (name, company, twitter alias with link) |
+| Solution | Author |
+| --- | --- |
+| ai-sdlc-matrix | Maksim Shachykau |
 
 ## Version history
 
-| Version | Date             | Comments        |
-| ------- | ---------------- | --------------- |
-| 1.1     | March 10, 2021   | Update comment  |
-| 1.0     | January 29, 2021 | Initial release |
-
-## Disclaimer
-
-**THIS CODE IS PROVIDED _AS IS_ WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
-
----
-
-## Minimal Path to Awesome
-
-- Clone this repository
-- Ensure that you are at the solution folder
-- in the command-line run:
-  - **npm install**
-  - **gulp serve**
-
-> Include any additional steps as needed.
-
-## Features
-
-Description of the extension that expands upon high-level summary above.
-
-This extension illustrates the following concepts:
-
-- topic 1
-- topic 2
-- topic 3
-
-> Notice that better pictures and documentation will increase the sample usage and the value you are providing for others. Thanks for your submissions advance.
-
-> Share your web part with others through Microsoft 365 Patterns and Practices program to get visibility and exposure. More details on the community, open-source projects and other activities from http://aka.ms/m365pnp.
+| Version | Date | Comments |
+| --- | --- | --- |
+| 1.0 | April 2026 | Initial release |
 
 ## References
 
-- [Getting started with SharePoint Framework](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/set-up-your-developer-tenant)
-- [Building for Microsoft teams](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/build-for-teams-overview)
-- [Use Microsoft Graph in your solution](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/web-parts/get-started/using-microsoft-graph-apis)
-- [Publish SharePoint Framework applications to the Marketplace](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/publish-to-marketplace-overview)
-- [Microsoft 365 Patterns and Practices](https://aka.ms/m365pnp) - Guidance, tooling, samples and open-source controls for your Microsoft 365 development
+- [SharePoint Framework documentation](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/)
+- [PnPJS documentation](https://pnp.github.io/pnpjs/)
+- [Microsoft 365 Patterns and Practices](https://aka.ms/m365pnp)

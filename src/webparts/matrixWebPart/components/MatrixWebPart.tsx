@@ -10,13 +10,14 @@ const SITE_URL  = 'https://maksimshachykau.sharepoint.com/sites/AI-SDLCRoleMatri
 const FOLDER_ROOT = '/sites/AI-SDLCRoleMatrix/SitePages/ai-sdlc-matrix';
 
 const PHASES = [
-  { display: 'Planning',              folder: 'Planning' },
-  { display: 'Requirements',          folder: 'Requirements' },
-  { display: 'Design / Architecture', folder: 'Design-Architecture' },
-  { display: 'Development',           folder: 'Development' },
-  { display: 'Testing',               folder: 'Testing' },
-  { display: 'Deployment / Release',  folder: 'Deployment-Release' },
-  { display: 'Maintenance',           folder: 'Maintenance' },
+  { display: 'Base AI Maturity',      folder: 'Base-AI-Maturity',   isDocRow: true  },
+  { display: 'Planning',              folder: 'Planning',           isDocRow: false },
+  { display: 'Requirements',          folder: 'Requirements',       isDocRow: false },
+  { display: 'Design / Architecture', folder: 'Design-Architecture',isDocRow: false },
+  { display: 'Development',           folder: 'Development',        isDocRow: false },
+  { display: 'Testing',               folder: 'Testing',            isDocRow: false },
+  { display: 'Deployment / Release',  folder: 'Deployment-Release', isDocRow: false },
+  { display: 'Maintenance',           folder: 'Maintenance',        isDocRow: false },
 ] as const;
 
 const LEVELS = [
@@ -49,6 +50,10 @@ function parseCellKey(fileRef: string): { key: string; levelId: string } | undef
   if (!lower.startsWith(root)) return undefined;
   const parts = lower.slice(root.length).split('/').filter(Boolean);
   if (parts.length < 3) return undefined;
+  // Developer has an extra sub-folder level: developer/{subfolder}/{phase}/{level}.aspx
+  if (parts[0] === 'developer' && parts.length >= 4) {
+    return { key: `${parts[0]}|${parts[1]}|${parts[2]}`, levelId: parts[3].replace('.aspx', '') };
+  }
   return { key: `${parts[0]}|${parts[1]}`, levelId: parts[2].replace('.aspx', '') };
 }
 
@@ -69,6 +74,16 @@ function InvolvementDot({ type }: { type: Involvement }): React.ReactElement {
   );
   // none
   return <span style={{ color: '#e2e8f0', fontSize: 18, fontWeight: 200, userSelect: 'none', lineHeight: 1 }}>·</span>;
+}
+
+// ─── Document icon (for Base AI Maturity row) ────────────────────────────────
+
+function DocumentIcon({ color }: { color: string }): React.ReactElement {
+  return (
+    <svg width={20} height={20} fill="none" stroke={color} strokeWidth={1.75} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+    </svg>
+  );
 }
 
 // ─── Legend ──────────────────────────────────────────────────────────────────
@@ -155,19 +170,17 @@ function PageModal({ url, onClose }: { url: string; onClose: () => void }): Reac
       }}>
         {/* Modal header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#334155', textDecoration: 'none', padding: '5px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#f1f5f9'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff'; }}
+          <button
+            onClick={() => { (window.top ?? window).open(url, '_blank', 'noopener,noreferrer'); }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#334155', textDecoration: 'none', padding: '5px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontFamily: 'Segoe UI, sans-serif' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; }}
           >
             <svg width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
             </svg>
             Open full page
-          </a>
+          </button>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -202,6 +215,8 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
   const [loading, setLoading]           = React.useState(true);
   const [error, setError]               = React.useState<string | null>(null);
   const [modalUrl, setModalUrl]         = React.useState<string | null>(null);
+  const [devSubFolders, setDevSubFolders] = React.useState<string[]>([]);
+  const [devSubFolder, setDevSubFolder]   = React.useState<string>('');
 
   React.useEffect(() => {
     Promise.all([
@@ -212,7 +227,8 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
         <PageItem[]>(),
     ])
     .then(([folders, pages]) => {
-      setRoles(folders.map(f => f.Name).sort());
+      const roleNames = folders.map(f => f.Name).sort();
+      setRoles(roleNames);
 
       const map = new Map<string, { files: Set<string>; inv: Involvement }>();
       for (const page of pages) {
@@ -226,8 +242,21 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
         if (inv !== 'none') entry.inv = inv;
       }
       setCellMap(map);
-      setLoading(false);
+
+      const devRole = roleNames.find(r => r.toLowerCase() === 'developer');
+      if (devRole) {
+        return sp.web
+          .getFolderByServerRelativePath(`${FOLDER_ROOT}/${devRole}`)
+          .folders<RoleFolder[]>()
+          .then(subFolders => {
+            const subNames = subFolders.map(f => f.Name).sort();
+            setDevSubFolders(subNames);
+            const defSub = subNames.find(n => n.toLowerCase() === 'general') ?? subNames[0] ?? '';
+            setDevSubFolder(defSub);
+          });
+      }
     })
+    .then(() => setLoading(false))
     .catch((err: Error) => {
       setError(err.message);
       setLoading(false);
@@ -235,7 +264,12 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
   }, [sp]);
 
   const openCell = (role: string, phaseFolder: string): void => {
-    setModalUrl(`${SITE_URL}/SitePages/ai-sdlc-matrix/${role}/${phaseFolder}/${level}.aspx`);
+    const isDevRole = role.toLowerCase() === 'developer';
+    if (isDevRole && devSubFolder) {
+      setModalUrl(`${SITE_URL}/SitePages/ai-sdlc-matrix/${role}/${devSubFolder}/${phaseFolder}/${level}.aspx`);
+    } else {
+      setModalUrl(`${SITE_URL}/SitePages/ai-sdlc-matrix/${role}/${phaseFolder}/${level}.aspx`);
+    }
   };
 
   if (loading) return <div style={{ padding: 24, fontFamily: 'Segoe UI, sans-serif' }}>Loading…</div>;
@@ -305,11 +339,32 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
                 <th style={{ position: 'sticky', left: 0, zIndex: 3, background: '#fff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', width: 144, minWidth: 144, padding: '10px 12px' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Phase / Role</span>
                 </th>
-                {roles.map(role => (
-                  <th key={role} style={{ borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #f1f5f9', padding: '10px 4px', textAlign: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', whiteSpace: 'nowrap' }}>{role}</span>
-                  </th>
-                ))}
+                {roles.map(role => {
+                  const isDevRole = role.toLowerCase() === 'developer';
+                  return (
+                    <th key={role} style={{ borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #f1f5f9', padding: '10px 4px', textAlign: 'center' }}>
+                      {isDevRole && devSubFolders.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>
+                            {role} · {devSubFolder}
+                          </span>
+                          <select
+                            value={devSubFolder}
+                            onChange={e => setDevSubFolder(e.target.value)}
+                            onClick={e => e.stopPropagation()}
+                            style={{ fontSize: 10, color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 4, padding: '2px 4px', background: '#f8fafc', cursor: 'pointer', fontFamily: 'Segoe UI, sans-serif', maxWidth: 80 }}
+                          >
+                            {devSubFolders.map(sub => (
+                              <option key={sub} value={sub}>{sub}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', whiteSpace: 'nowrap' }}>{role}</span>
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -325,11 +380,14 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
                   </td>
 
                   {roles.map(role => {
-                    const cellKey  = `${role.toLowerCase()}|${phase.folder.toLowerCase()}`;
+                    const isDevRole = role.toLowerCase() === 'developer';
+                    const cellKey   = isDevRole && devSubFolder
+                      ? `developer|${devSubFolder.toLowerCase()}|${phase.folder.toLowerCase()}`
+                      : `${role.toLowerCase()}|${phase.folder.toLowerCase()}`;
                     const entry    = cellMap.get(cellKey);
                     const hasFile  = entry?.files.has(level) ?? false;
                     const inv      = entry?.inv ?? 'none';
-                    const isNone   = !hasFile || inv === 'none';
+                    const isNone   = !hasFile || (phase.isDocRow ? false : inv === 'none');
                     const hKey     = `${role}|${phase.folder}`;
                     const isHov    = hoveredCell === hKey;
                     const isSel    = selectedCell === hKey;
@@ -343,7 +401,7 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
                           onClick={!isNone ? () => { setSelectedCell(hKey); openCell(role, phase.folder); } : undefined}
                           onMouseEnter={!isNone ? () => setHoveredCell(hKey) : undefined}
                           onMouseLeave={!isNone ? () => setHoveredCell(null) : undefined}
-                          title={!isNone ? `${role} · ${phase.display} · ${inv} — open ${level}` : undefined}
+                          title={!isNone ? `${role} · ${phase.display} — open ${level}` : undefined}
                           style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '100%', height: 56, borderRadius: 8,
@@ -353,7 +411,10 @@ export default function MatrixWebPart({ sp }: IMatrixWebPartProps): React.ReactE
                             boxShadow: isSel ? '0 0 0 2px #334155 inset' : 'none',
                           }}
                         >
-                          <InvolvementDot type={hasFile ? inv : 'none'} />
+                          {phase.isDocRow
+                            ? hasFile && <DocumentIcon color={activeLevelMeta.color} />
+                            : <InvolvementDot type={hasFile ? inv : 'none'} />
+                          }
                         </div>
                       </td>
                     );
